@@ -24,6 +24,8 @@ using namespace std;
 #define KEY_NUM 4
 #define LIFE 3
 #define MAX_LEVEL 11
+#define Delete 100
+
 enum MENU
 {
     GAMESTART = 0,
@@ -72,6 +74,14 @@ bool desc(int cmp1, int cmp2)//DataSorting
     return cmp1 > cmp2;
 }
 
+void Life(const int x)
+{
+    for (int i = 0; i < x; i++)
+    {
+        cout << "♥";
+    }
+}
+
 //Cursor move
 void gotoxy(int x, int y)
 {
@@ -111,16 +121,26 @@ void DrawInfoGame()
     system("cls");
     gotoxy(1, 3);
     cout << "*******************************************";
-    gotoxy(1, 4);
-    cout << "|Developer - BlockDMask";
     gotoxy(1, 5);
-    cout << "|Blog - https://blockdmask.tistory.com/";
+    cout << "|Team name: Rhythm Game with no Rhythm";
+    gotoxy(1, 6);
+    cout << "|Leader: Jeong Yeongjin";
+    gotoxy(1, 6);
+    cout << "|Members: Kang Juho, Lee Jeho, Park Yeonghun";
     gotoxy(1, 8);
-    cout << "|Thank you.";
+    cout << "1.The first 5 seconds are given,";
     gotoxy(1, 9);
-    cout << "*******************************************";
+    cout << "  and life is reduced after 5 seconds";
     gotoxy(1, 10);
-    cout << "|Music - https://www.youtube.com/HYPMUSIC";
+    cout << "2.If your answer is correct, 2 seconds are added";
+    gotoxy(1, 11);
+    cout << "3.Apart from the passing of 5 seconds,";
+    gotoxy(1, 12);
+    cout << "  each time it is wrong, life is destroyed";
+    gotoxy(1, 14);
+    cout << "*******************************************";
+    gotoxy(1, 15);
+    cout << "|Music - Free music sources on YouTube.";
 }
 
 void DrawSoundSet()
@@ -148,22 +168,26 @@ void DrawSoundSet()
     cout << "SLOW" << endl;
 }
 
-void DrawStartGame(const int life, const int score, const int STime, const string questionStr, const string answerStr)
+void DrawStartGame(const int life, const int score, const int combo, const int STime, const string questionStr, const string answerStr)
 {
     system("cls");
     gotoxy(2, 1);
     cout << "*******************************************";
     gotoxy(4, 3);
-    cout << "Life : " << life << " / " << LIFE;
+    cout << "Life : "; Life(life);
     gotoxy(4, 4);
     cout << "Score : " << score;
     gotoxy(4, 5);
+    cout << "Combo : " << combo;
+    gotoxy(4, 6);
     cout << "시간 : " << STime;
     gotoxy(4, 8);
     cout << "Q : " << questionStr;
     gotoxy(4, 10);
     cout << "A : " << answerStr;
     gotoxy(4, 12);
+    cout << "press D(KeyBoard) if you want delete.";
+    gotoxy(4, 13);
     cout << "press SPACE! after input done.";
     gotoxy(2, 18);
     cout << "*******************************************" << endl;
@@ -220,6 +244,7 @@ void DrawScoreBoard(GameData* gamedata)
 //게임 오버 그리기
 void DrawGameOver(const int playTime)
 {
+    system("cls");
     gotoxy(8, 8);
     cout << "-------------------";
     gotoxy(8, 9);
@@ -434,10 +459,11 @@ void StartGame()
     PlaySound(test, NULL, SND_NODEFAULT | SND_ASYNC | SND_LOOP);
     int life = LIFE;
     int score = 0;
+    int combo = 0;
     int STime = 0;
-    int time1 = 0;
+    int time1 = 5;
     //재생했을때 현재시간.
-    clock_t startTime, endTime,LTime,curr;
+    clock_t startTime, endTime,LTime;
     startTime = clock();
 
     //→←↑↓, d a w s
@@ -454,7 +480,7 @@ void StartGame()
         int level = (score / 30) + 1;
         
         //문제를 세팅
-        SetQuestion(questionVec, level);
+        SetQuestion(questionVec, level);    
         //문제를 보여주기.
         VectorToString(questionVec, questionStr);
         while (true)
@@ -462,7 +488,8 @@ void StartGame()
             //1문제를 가지고 문제를 푼다.
             LTime = clock();
             STime = static_cast<int>((LTime - startTime) / CLOCKS_PER_SEC);
-            DrawStartGame(life, score, STime, questionStr, answerStr);
+            int t = time1 - STime;
+            DrawStartGame(life, score, combo ,t, questionStr, answerStr);
             if (life == 0)
             {
                 //게임 오버일때 현재시간
@@ -506,7 +533,16 @@ void StartGame()
                 PlaySound(NULL, NULL, 0);
                 return;
             }
-            curr = clock();
+            if (t == 0) // 시간초 끝날때 게임오버로 하고싶으면 lief=0으로 만들면 됨
+            {
+                --life;
+                time1 += 5;
+                questionVec.clear();
+                questionStr = "";
+                answerVec.clear();
+                answerStr = "";
+                break;
+            }
                 if (_kbhit())
                 {
                     firstInput = _getch();
@@ -530,17 +566,35 @@ void StartGame()
                             break;
                         }
                     }
+                    else if (firstInput == Delete) {
+                        if (answerStr.size() == 0) {
+
+                        }
+                        else {
+                            answerStr.pop_back();
+                            answerStr.pop_back();
+                            answerStr.pop_back();
+                            answerVec.pop_back();
+                        }
+                    }
+
                     else if (firstInput == SPACE)
                     {
                         //답안 제출
                         //답안 확인
                         if (CheckAnswer(questionVec, answerVec))
                         {
-                            score += 10;
+                            score = score + questionVec.size()+combo;
+                            combo = combo + questionVec.size();
+                            if (t > 0)
+                            {
+                                time1 += 2;
+                            }
                         }
                         else
                         {
                             //틀렸다.
+                            combo = 0;
                             --life;
                             score -= 5;
                             if (score < 0)
