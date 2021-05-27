@@ -18,7 +18,7 @@ using namespace std;
 //[PART2] input&output, question, life.
 //[PART3] setting level, play music, play time
 
-#define MAX_DATA 1000
+#define MAX_DATA 6
 #define MAGIC_KEY 224
 #define SPACE 32
 #define KEY_NUM 4
@@ -206,12 +206,44 @@ string DrawScoreSet(const int score, const int playTime)
     gotoxy(4, 12);
     cout << "Input your three letter initials.";
     gotoxy(4, 14);
-    cout << "press ENTER! after input done.";
+    cout << "press SPACE! after input done.";
     gotoxy(2, 18);
     cout << "*******************************************" << endl;
     string gamer;
-    gotoxy(14, 9);
-    cin >> setw(10) >> gamer;
+    
+    string NameStr = "";
+    int i = 0;
+    int input = 0;
+    while (i < 3) 
+    {
+        input = _getch();        
+        if (input >=65 && input <= 90)
+        {
+            NameStr += input;
+            i++;
+        }
+        else if (input == Delete)
+        {
+            if (NameStr.length()==0)
+            { }
+            else {
+                NameStr.erase(NameStr.end());
+                i--;
+            }
+        } 
+        gotoxy(14, 9);
+        cout << NameStr;
+        input = 0;
+    }
+    while (true)
+    {
+        input = _getch();
+        if (input == SPACE)
+        {
+            break;
+        }
+    }
+    gamer = NameStr;
     return gamer;
 }
 
@@ -516,9 +548,20 @@ void StartGame()
                     i++;
                 }
                 int k = i;
+                sort(gamedata, gamedata + k);       //데이터 정렬
+                fout.close();
+                fout.open("Board.txt", ios::trunc); // 새로 txt 생성 후 정렬한 데이터 저장
+                int j = 0;
+                while (j < 5)
+                {
+                    fout << gamedata[j].gamescore << ' ';
+                    fout << gamedata[j].gamesec << ' ';
+                    fout << gamedata[j].gamename << endl;
+                    j++;
+                }
                 fout.close();
                 fin.close();
-                sort(gamedata, gamedata + k);
+                
                 DrawScoreBoard(gamedata);
                 int input = 0;
                 while (true)
