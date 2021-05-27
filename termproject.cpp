@@ -222,15 +222,23 @@ string DrawScoreSet(const int score, const int playTime)
             NameStr += input;
             i++;
         }
+        
         else if (input == Delete)
         {
-            if (NameStr.length()==0)
+            if (NameStr.empty())
             { }
-            else {
-                NameStr.erase(NameStr.end());
+            else if (NameStr.length() == 1)
+            {
+                NameStr.clear();
+                i = 0;
+            }
+            else 
+            {
+                NameStr.erase(NameStr.length()-1,NameStr.length()-1);
                 i--;
             }
         } 
+        
         gotoxy(14, 9);
         cout << NameStr;
         input = 0;
@@ -528,31 +536,29 @@ void StartGame()
                 endTime = clock();
                 int playTime = static_cast<int>((endTime - startTime) / CLOCKS_PER_SEC);
                 string gamer = DrawScoreSet(score, playTime);//append
-                cout << gamer << endl;
                 GameData gamedata[MAX_DATA];
-
+                gamer.resize(3); //잘 못 전달되더라도 3글자만 받음
                 ofstream fout;
                 ifstream fin;
                 fout.open("Board.txt", ios::app);
                 fout << score << ' ';
                 fout << playTime << ' ';
-                fout << gamer << endl;
-
+                fout << gamer <<endl;
+                fout.close();
                 fin.open("Board.txt");
                 int i = 0;
-                while (!fin.eof())
+                while (!fin.eof())                  
                 {
                     fin >> gamedata[i].gamescore;
                     fin >> gamedata[i].gamesec;
                     fin >> gamedata[i].gamename;
                     i++;
                 }
-                int k = i;
+                int k = i-1;                        //마지막에 endl 을 넣어서 바로 eof를 찾지못하고 한번 더 루프를 돌아서 i가 1만큼 더 큼
                 sort(gamedata, gamedata + k);       //데이터 정렬
-                fout.close();
                 fout.open("Board.txt", ios::trunc); // 새로 txt 생성 후 정렬한 데이터 저장
                 int j = 0;
-                while (j < 5)
+                while (j < k)
                 {
                     fout << gamedata[j].gamescore << ' ';
                     fout << gamedata[j].gamesec << ' ';
