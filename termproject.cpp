@@ -18,7 +18,7 @@ using namespace std;
 //[PART2] input&output, question, life.
 //[PART3] setting level, play music, play time
 
-#define MAX_DATA 6
+#define MAX_DATA 300
 #define MAGIC_KEY 224
 #define SPACE 32
 #define KEY_NUM 4
@@ -65,7 +65,10 @@ public:
 
     bool operator <(GameData& gamedata)
     {
-        return this->gamescore > gamedata.gamescore;
+        if (gamedata.gamescore != this->gamescore)
+            return this->gamescore > gamedata.gamescore;
+        else
+            return this->gamesec < gamedata.gamesec;
     }
 };
 
@@ -168,7 +171,7 @@ void DrawSoundSet()
     cout << "SLOW" << endl;
 }
 
-void DrawStartGame(const int life, const int score, const int combo, const int STime, const string questionStr, const string answerStr)
+void DrawStartGame(const int life, const int score, const int combo, const int STime, const int level, const string questionStr, const string answerStr)
 {
     system("cls");
     gotoxy(2, 1);
@@ -181,6 +184,8 @@ void DrawStartGame(const int life, const int score, const int combo, const int S
     cout << "Combo : " << combo;
     gotoxy(4, 6);
     cout << "시간 : " << STime;
+    gotoxy(17, 6);
+    cout << level << " 단계";
     gotoxy(4, 8);
     cout << "Q : " << questionStr;
     gotoxy(4, 10);
@@ -502,6 +507,8 @@ void StartGame()
     int combo = 0;
     int STime = 0;
     int time1 = 5;
+    int exp = 0;
+    int level = 1;
     //재생했을때 현재시간.
     clock_t startTime, endTime,LTime;
     startTime = clock();
@@ -529,7 +536,7 @@ void StartGame()
             LTime = clock();
             STime = static_cast<int>((LTime - startTime) / CLOCKS_PER_SEC);
             int t = time1 - STime;
-            DrawStartGame(life, score, combo ,t, questionStr, answerStr);
+            DrawStartGame(life, score, combo ,t, level, questionStr, answerStr);
             if (life == 0)
             {
                 //게임 오버일때 현재시간
@@ -554,8 +561,14 @@ void StartGame()
                     fin >> gamedata[i].gamename;
                     i++;
                 }
-                int k = i-1;                        //마지막에 endl 을 넣어서 바로 eof를 찾지못하고 한번 더 루프를 돌아서 i가 1만큼 더 큼
+                int k = i-1;         //마지막에 endl 을 넣어서 바로 eof를 찾지못하고 한번 더 루프를 돌아서 i가 1만큼 더 큼
                 sort(gamedata, gamedata + k);       //데이터 정렬
+                if (k <= 5)
+                { }
+                else
+                {
+                    k = 5;
+                }
                 fout.open("Board.txt", ios::trunc); // 새로 txt 생성 후 정렬한 데이터 저장
                 int j = 0;
                 while (j < k)
@@ -585,7 +598,16 @@ void StartGame()
             if (t == 0) // 시간초 끝날때 게임오버로 하고싶으면 lief=0으로 만들면 됨
             {
                 --life;
-                time1 += 5;
+                if (level <= 3)
+                {
+                    time1 += 3;
+                }
+                else if (level <= 7)
+                {
+                    time1 += 7;
+                }
+                else
+                    time1 += level;
                 questionVec.clear();
                 questionStr = "";
                 answerVec.clear();
@@ -635,6 +657,11 @@ void StartGame()
                         {
                             score = score + questionVec.size()+combo;
                             combo = combo + questionVec.size();
+                            ++exp;
+                            if (exp % 3 == 0)
+                            {
+                                ++level;
+                            }
                             if (t > 0)
                             {
                                 time1 += 2;
